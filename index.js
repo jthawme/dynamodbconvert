@@ -2,27 +2,41 @@ const fs = require("fs");
 const path = require("path");
 const jsonfile = require("jsonfile");
 const csv = require("fast-csv");
-const gunzip = require("gunzip-file");
+const { exec } = require("child_process");
+// const gunzip = require("gunzip-file");
 
 const srcFolder = path.join(__dirname, "src");
 const tmpFolder = path.join(__dirname, "tmp");
 const distFolder = path.join(__dirname, "dist");
 
-const convertGzip = (fileName) => {
-  if (!fs.existsSync(tmpFolder)) {
-    fs.mkdirSync(tmpFolder);
+const ensureDir = (dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
   }
+};
+
+const convertGzip = (fileName) => {
+  ensureDir(tmpFolder);
 
   return new Promise((resolve) => {
     const targetFile = fileName.replace(".gz", "");
 
-    gunzip(
-      path.join(srcFolder, fileName),
-      path.join(tmpFolder, targetFile),
-      () => {
-        resolve(targetFile);
-      }
-    );
+    exec(
+      `gzcat ${path.join(srcFolder, fileName)} | tail > ${path.join(
+        tmpFolder,
+        targetFile
+      )}`
+    ).on("exit", () => {
+      resolve(targetFile);
+    });
+
+    // gunzip(
+    //   path.join(srcFolder, fileName),
+    //   path.join(tmpFolder, targetFile),
+    //   () => {
+    //     resolve(targetFile);
+    //   }
+    // );
   });
 };
 
@@ -54,13 +68,12 @@ const saveData = (file, data) => {
 
       // Map the data to something nice here
       return data.map(({ Item }) => ({
-        phoneNumber: Item.formattedPhoneNumber
-          ? Item.formattedPhoneNumber.S
-          : false,
+        phoneNumber: Item.phoneNumber ? Item.phoneNumber.S : false,
       }));
     })
   );
 
+  ensureDir(distFolder);
   const csvStream = csv.format({ headers: true });
   var writeStream = fs.createWriteStream(path.join(distFolder, "output.csv"));
   csvStream.pipe(writeStream);
