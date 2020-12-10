@@ -21,22 +21,22 @@ const convertGzip = (fileName) => {
   return new Promise((resolve) => {
     const targetFile = fileName.replace(".gz", "");
 
-    exec(
-      `gzcat ${path.join(srcFolder, fileName)} | tail > ${path.join(
-        tmpFolder,
-        targetFile
-      )}`
-    ).on("exit", () => {
-      resolve(targetFile);
-    });
+    // exec(
+    //   `gzcat ${path.join(srcFolder, fileName)} | tail > ${path.join(
+    //     tmpFolder,
+    //     targetFile
+    //   )}`
+    // ).on("exit", () => {
+    //   resolve(targetFile);
+    // });
 
-    // gunzip(
-    //   path.join(srcFolder, fileName),
-    //   path.join(tmpFolder, targetFile),
-    //   () => {
-    //     resolve(targetFile);
-    //   }
-    // );
+    gunzip(
+      path.join(srcFolder, fileName),
+      path.join(tmpFolder, targetFile),
+      () => {
+        resolve(targetFile);
+      }
+    );
   });
 };
 
